@@ -9,14 +9,13 @@ import io.ktor.client.plugins.RedirectResponseException
 import io.ktor.client.plugins.ServerResponseException
 import io.ktor.client.request.get
 import io.ktor.client.request.post
-import io.ktor.client.request.preparePost
 import io.ktor.client.request.setBody
 import io.ktor.client.request.url
-import io.ktor.client.utils.EmptyContent.contentType
 import io.ktor.http.ContentType
-import io.ktor.http.HttpHeaders.ContentType
 import io.ktor.http.contentType
 import io.ktor.utils.io.InternalAPI
+import kotlinx.serialization.json.Json
+
 
 class LocationServiceImpl(
     private val client: HttpClient
@@ -47,23 +46,25 @@ class LocationServiceImpl(
     }
 
     override suspend fun emitLocation(locationItem: LocationItem): Item? {
-       return try {
-                client.post {
-                    url(HttpRoutes.LOCATIONS)
-                    contentType(io.ktor.http.ContentType.Application.Json)
-                    setBody(locationItem)
-                }.call.response.body<Item>()
+        return try {
+            val res = client.post {
+                url(HttpRoutes.LOCATIONS)
+                setBody(locationItem)
+            }
+            Log.i("Body -> ", res.status.value.toString())
+            Log.i("Body -> ", res.body())
+            return res.body()
         } catch (e: RedirectResponseException) {
             // 3.x.x
-            Log.i("Error -> ", e.response.status.description)
+            Log.i("Error 3 -> ", e.response.status.description)
             return null
         } catch (e: ClientRequestException) {
             // 4.x.x
-            Log.i("Error -> ", e.response.status.description)
+            Log.i("Error 4 -> ", e.response.status.description)
             return null
         } catch (e: ServerResponseException) {
             // 5.x.x
-            Log.i("Error -> ", e.response.status.description)
+            Log.i("Error 5 -> ", e.response.status.description)
             return null
         } catch (e: Exception) {
             Log.i("Error -> ", e.toString())
